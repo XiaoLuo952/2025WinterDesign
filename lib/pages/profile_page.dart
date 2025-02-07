@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'edit_profile_page.dart';
 import 'settings_page.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -13,6 +14,7 @@ class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isGuest = true; // 用于判断是否为游客状态
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -49,35 +51,119 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
+  void _showAvatarDialog() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              child: Icon(Icons.person, size: 150, color: Colors.grey),
+            ),
+            SizedBox(height: 20),
+            TextButton(
+              onPressed: () async {
+                final XFile? image =
+                    await _picker.pickImage(source: ImageSource.gallery);
+                if (image != null) {
+                  // 处理头像更新逻辑
+                }
+                Navigator.pop(context);
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text('更换头像'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBackgroundDialog() {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              height: 200,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.image, size: 80, color: Colors.grey),
+            ),
+            SizedBox(height: 20),
+            TextButton(
+              onPressed: () async {
+                final XFile? image =
+                    await _picker.pickImage(source: ImageSource.gallery);
+                if (image != null) {
+                  // 处理背景图更新逻辑
+                }
+                Navigator.pop(context);
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text('更换背景图'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
           Container(
-            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/profile_bg.jpg'), // 需要添加背景图
+                image: AssetImage('assets/images/profile_bg.jpg'),
                 fit: BoxFit.cover,
               ),
-              color: Color(0xFFF0F9E6), // 如果没有背景图，使用浅绿色
+              color: Color(0xFFF0F9E6),
             ),
             child: Column(
               children: [
+                SizedBox(height: MediaQuery.of(context).padding.top),
                 Padding(
                   padding: EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                      GestureDetector(
+                        onTap: _showAvatarDialog,
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child:
+                              Icon(Icons.person, size: 40, color: Colors.grey),
                         ),
-                        child: Icon(Icons.person, size: 40, color: Colors.grey),
                       ),
                       SizedBox(width: 16),
                       Expanded(
@@ -94,7 +180,7 @@ class _ProfilePageState extends State<ProfilePage>
                             ),
                             SizedBox(height: 4),
                             Text(
-                              _isGuest ? '暂无个性签名' : '个性签名',
+                              _isGuest ? '填写简介，让大家认识更好的你！' : '个人简介',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey[600],
@@ -123,12 +209,17 @@ class _ProfilePageState extends State<ProfilePage>
                       Row(
                         children: [
                           TextButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).push(
+                            onPressed: () async {
+                              final result = await Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) => const EditProfilePage(),
                                 ),
                               );
+                              if (result != null) {
+                                setState(() {
+                                  _isGuest = false;
+                                });
+                              }
                             },
                             icon: Icon(Icons.edit),
                             label: Text('编辑资料'),
