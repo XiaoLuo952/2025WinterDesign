@@ -23,5 +23,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/ 
+    - assets/
+    - assets/plant.xlsx
+    - assets/pictures/
+    - assets/images/
+    - assets/images/sky.png
+    - assets/images/floor.png
+    - assets/images/sun.png
     - assets/images/orange_tree.png 

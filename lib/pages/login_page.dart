@@ -93,7 +93,8 @@ class _LoginPageState extends State<LoginPage> {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: Color(0xFF2E7D32)),
                           ),
-                          prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF2E7D32)),
+                          prefixIcon: Icon(Icons.lock_outline,
+                              color: Color(0xFF2E7D32)),
                         ),
                       ),
                     ),
@@ -136,7 +137,8 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 16),
               TextButton(
-                onPressed: () => Navigator.pushReplacementNamed(context, '/home'),
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, '/home'),
                 style: TextButton.styleFrom(
                   foregroundColor: Color(0xFF2E7D32),
                 ),
@@ -148,4 +150,4 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-} 
+}

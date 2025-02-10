@@ -19,4 +19,4 @@ class AppTheme {
       unselectedItemColor: Colors.grey,
     ),
   );
-} 
+}

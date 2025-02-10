@@ -227,7 +227,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         Container(
                           width: MediaQuery.of(context).size.width,
-                          child: Image.network(
+                          child: Image.asset(
                             plant.imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
@@ -313,7 +313,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
+                        child: Image.asset(
                           plant.imageUrl,
                           width: double.infinity,
                           height: double.infinity,
@@ -484,8 +484,8 @@ class _HomePageState extends State<HomePage> {
           label: '社区',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.inventory, size: 28),
-          label: '仓库',
+          icon: Icon(Icons.menu_book, size: 28),
+          label: '百科',
         ),
         BottomNavigationBarItem(
           icon: Container(

@@ -27,7 +27,7 @@ class EncyclopediaDetailPage extends StatelessWidget {
           children: [
             AspectRatio(
               aspectRatio: 16 / 9,
-              child: Image.network(
+              child: Image.asset(
                 plant.imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
