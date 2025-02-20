@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
+import '../theme/app_theme.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key}) : super(key: key);
@@ -10,8 +11,8 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final _nicknameController = TextEditingController();
-  final _bioController = TextEditingController();
+  final _nameController = TextEditingController(text: '用户名');
+  final _bioController = TextEditingController(text: '这个人很懒，什么都没写~');
   final _locationController = TextEditingController();
   final _birthdayController = TextEditingController();
   String _gender = '选择性别';
@@ -20,191 +21,138 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF0F9E6),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Color(0xFFB1DF0B),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: Text('编辑资料'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              // 保存编辑的信息
-              Navigator.pop(context, {
-                'nickname': _nicknameController.text,
-                'bio': _bioController.text,
-                'gender': _gender,
-                'birthday': _birthdayController.text,
-                'location': _locationController.text,
-              });
-            },
-            child: Text('保存', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+        backgroundColor: AppTheme.customGreen,
+        elevation: 0,
       ),
-      body: ListView(
-        children: [
-          Container(
-            padding: EdgeInsets.all(16),
-            alignment: Alignment.center,
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.grey[200],
-                  child: Icon(Icons.person, size: 50, color: Colors.grey),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    final XFile? image =
-                        await _picker.pickImage(source: ImageSource.gallery);
-                    if (image != null) {
-                      // 处理头像更新
-                    }
-                  },
-                  child: Text('更换头像'),
-                ),
-              ],
-            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/background.png'),
+            fit: BoxFit.cover,
           ),
-          _buildDivider(),
-          _buildSection('昵称', _nicknameController, '填写昵称'),
-          _buildSection('简介', _bioController, '填写简介，让大家认识更好的你！', maxLines: 3),
-          _buildDivider(),
-          _buildSection('性别', null, _gender, onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text('选择性别'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ListTile(
-                      title: Text('男'),
-                      onTap: () {
-                        setState(() => _gender = '男');
-                        Navigator.pop(context);
-                      },
+                    Text(
+                      '基本信息',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
-                    ListTile(
-                      title: Text('女'),
-                      onTap: () {
-                        setState(() => _gender = '女');
-                        Navigator.pop(context);
-                      },
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: _nameController,
+                      style: TextStyle(color: Colors.black),
+                      decoration: InputDecoration(
+                        labelText: '用户名',
+                        labelStyle: TextStyle(color: Colors.black54),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: AppTheme.customGreen,
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: _bioController,
+                      maxLines: 3,
+                      style: TextStyle(color: Colors.black),
+                      decoration: InputDecoration(
+                        labelText: '个性签名',
+                        labelStyle: TextStyle(color: Colors.black54),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: AppTheme.customGreen,
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.8),
+                      ),
                     ),
                   ],
                 ),
               ),
-            );
-          }),
-          _buildSection('生日', _birthdayController, '选择生日', onTap: () async {
-            final DateTime? picked = await showDatePicker(
-              context: context,
-              initialDate: DateTime(2000),
-              firstDate: DateTime(1900),
-              lastDate: DateTime.now(),
-            );
-            if (picked != null) {
-              setState(() {
-                _birthdayController.text =
-                    "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-              });
-            }
-          }),
-          _buildSection('地区', _locationController, '选择地区', onTap: () {
-            // 这里可以添加地区选择器
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSection(
-      String title, TextEditingController? controller, String hint,
-      {int maxLines = 1, VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 80,
-              child: Text(
-                title,
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 16,
+              SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.customGreen,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    '保存',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: controller == null
-                  ? Text(
-                      hint,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    )
-                  : TextField(
-                      controller: controller,
-                      maxLines: maxLines,
-                      style: TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: hint,
-                        hintStyle: TextStyle(color: Colors.grey[600]),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-            ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[600]),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildImageSection(String title) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 16,
-              ),
-            ),
-          ),
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.grey[800],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.add_photo_alternate, color: Colors.grey[400]),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Divider(
-      color: Colors.grey[800],
-      height: 1,
-      thickness: 1,
-    );
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _bioController.dispose();
+    super.dispose();
   }
 }

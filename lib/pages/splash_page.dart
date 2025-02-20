@@ -7,32 +7,14 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _opacityAnimation;
-
+class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-
-    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-
-    _controller.forward().then((_) {
+    // 直接导航到登录页面，不使用动画
+    Future.delayed(Duration.zero, () {
       Navigator.pushReplacementNamed(context, '/login');
     });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
@@ -40,27 +22,24 @@ class _SplashPageState extends State<SplashPage>
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: FadeTransition(
-          opacity: _opacityAnimation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.local_florist,
-                size: 120,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.local_florist,
+              size: 120,
+              color: Colors.green,
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              '植物社区',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
                 color: Colors.green,
               ),
-              const SizedBox(height: 24),
-              const Text(
-                '植物社区',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

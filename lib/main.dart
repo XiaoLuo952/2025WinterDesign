@@ -15,8 +15,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: '植物社区',
-      theme: AppTheme.lightTheme,
-      initialRoute: '/',
+      theme: ThemeData(
+        scaffoldBackgroundColor: Colors.transparent,
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        pageTransitionsTheme: PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
+      ),
+      initialRoute: '/login',
       routes: {
         '/': (context) => const SplashPage(),
         '/login': (context) => const LoginPage(),

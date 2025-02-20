@@ -11,6 +11,7 @@ import 'dart:io';
 import '../models/plant.dart';
 import '../services/plant_service.dart';
 import 'virtual_plant_page.dart';
+import '../theme/app_theme.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -47,19 +48,102 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: _buildAppBar(),
-      body: _buildBody(),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      body: Stack(
+        // 使用 Stack 来叠加内容和底部导航栏
+        children: [
+          Container(
+            // 背景和主要内容
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/background.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: _buildBody(),
+          ),
+          Positioned(
+            // 底部导航栏
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppTheme.customGreen.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: BottomNavigationBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  currentIndex: _currentIndex,
+                  onTap: (index) {
+                    if (index == 2) {
+                      _showPublishSheet();
+                    } else {
+                      setState(() {
+                        _currentIndex = index;
+                      });
+                    }
+                  },
+                  type: BottomNavigationBarType.fixed,
+                  selectedFontSize: 14,
+                  unselectedFontSize: 14,
+                  selectedItemColor: Colors.white,
+                  unselectedItemColor: Colors.white70,
+                  items: [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home, size: 28),
+                      label: '社区',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.menu_book, size: 28),
+                      label: '百科',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Container(
+                        margin: EdgeInsets.only(top: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange, // 中间按钮的颜色
+                          shape: BoxShape.circle, // 圆形
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        padding: EdgeInsets.all(8),
+                        child: Icon(Icons.add, color: Colors.white, size: 28),
+                      ),
+                      label: '',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.park, size: 28),
+                      label: '虚拟植物',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.person, size: 28),
+                      label: '我的',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
-    final Color customGreen = Color(0xFFB1DF0B);
-
-    // 社区页面
     if (_currentIndex == 0) {
       return AppBar(
-        backgroundColor: customGreen,
+        backgroundColor: AppTheme.customGreen,
         elevation: 0,
         leading: GestureDetector(
           onTap: () {
@@ -130,7 +214,7 @@ class _HomePageState extends State<HomePage> {
     // 仓库页面
     if (_currentIndex == 1) {
       return AppBar(
-        backgroundColor: customGreen,
+        backgroundColor: AppTheme.customGreen,
         elevation: 0,
         title: Container(
           height: 40,
@@ -393,6 +477,7 @@ class _HomePageState extends State<HomePage> {
             },
             child: Card(
               elevation: 2,
+              color: Color(0xFFE8F5E9),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -444,6 +529,20 @@ class _HomePageState extends State<HomePage> {
                               '用户名',
                               style: TextStyle(fontSize: 12),
                             ),
+                            Spacer(),
+                            Icon(
+                              Icons.favorite,
+                              color: Colors.red,
+                              size: 14,
+                            ),
+                            SizedBox(width: 2),
+                            Text(
+                              '12',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -456,60 +555,6 @@ class _HomePageState extends State<HomePage> {
         },
       );
     }
-  }
-
-  Widget _buildBottomNavigationBar() {
-    final Color customGreen = Color(0xFFB1DF0B);
-
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      onTap: (index) {
-        if (index == 2) {
-          _showPublishSheet();
-        } else {
-          setState(() {
-            _currentIndex = index;
-          });
-        }
-      },
-      type: BottomNavigationBarType.fixed,
-      selectedFontSize: 14,
-      unselectedFontSize: 14,
-      backgroundColor: customGreen,
-      selectedItemColor: Colors.white,
-      unselectedItemColor: Colors.white70,
-      items: [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home, size: 28),
-          label: '社区',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.menu_book, size: 28),
-          label: '百科',
-        ),
-        BottomNavigationBarItem(
-          icon: Container(
-            margin: EdgeInsets.only(top: 8),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            padding: EdgeInsets.all(8),
-            child: Icon(Icons.add, color: Colors.white, size: 28),
-          ),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.park, size: 28),
-          label: '虚拟植物',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person, size: 28),
-          label: '我的',
-        ),
-      ],
-    );
   }
 
   void _showPublishSheet() {

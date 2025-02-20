@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/virtual_plant.dart';
-import 'dart:math';
+import '../theme/app_theme.dart';
 
 class VirtualPlantPage extends StatefulWidget {
   @override
@@ -21,22 +21,36 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
     final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Color(0xFFF0F9E6),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Color(0xFFB1DF0B),
-        title: Text(_plant.isPlanted
-            ? '这是你陪伴${_plant.name}的第${_plant.days}天'
-            : '开始你的种植之旅吧'),
+        backgroundColor: AppTheme.customGreen,
+        automaticallyImplyLeading: false,
+        title: Text(
+          _plant.isPlanted
+              ? '这是你陪伴${_plant.name}的第${_plant.days}天'
+              : '开始你的种植之旅吧',
+          style: TextStyle(color: Colors.white),
+        ),
         elevation: 0,
       ),
       body: Stack(
         children: [
-          // 天空背景
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/sky.png',
-              fit: BoxFit.cover,
-            ),
+          // 背景层
+          Column(
+            children: [
+              Expanded(
+                child: Image.asset(
+                  'assets/images/sky.png',
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Image.asset(
+                'assets/images/floor.png',
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ],
           ),
           // 太阳
           Positioned(
@@ -44,36 +58,26 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
             right: 20,
             child: Image.asset(
               'assets/images/sun.png',
-              width: 150, // 增大太阳尺寸
-              height: 150,
-            ),
-          ),
-          // 地板
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Image.asset(
-              'assets/images/floor.png',
-              fit: BoxFit.cover,
+              width: 120,
+              height: 120,
             ),
           ),
           // 植物或加号按钮
           Positioned(
-            bottom: 50, // 从 100 改为 50，进一步下移
+            bottom: 100,
             left: 0,
             right: 0,
             child: Center(
               child: _plant.isPlanted
                   ? Image.asset(
                       'assets/images/orange_tree.png',
-                      height: 500,
+                      height: 400,
                       fit: BoxFit.contain,
                     )
                   : IconButton(
                       icon: Icon(Icons.add_circle_outline),
                       iconSize: 100,
-                      color: Colors.green,
+                      color: AppTheme.customGreen,
                       onPressed: _showPlantDialog,
                     ),
             ),
@@ -154,19 +158,19 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
     required bool isLeft,
   }) {
     return Transform.translate(
-      offset: Offset(isLeft ? -20 : 20, 0), // 根据方向设置偏移
+      offset: Offset(isLeft ? -40 : 40, 0),
       child: Container(
-        width: 60,
+        width: 125,
         height: 60,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFFAEC3AC),
           borderRadius: BorderRadius.horizontal(
             left: isLeft ? Radius.zero : Radius.circular(30),
             right: isLeft ? Radius.circular(30) : Radius.zero,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 8,
               offset: Offset(isLeft ? 2 : -2, 2),
             ),
@@ -180,10 +184,36 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
               left: isLeft ? Radius.zero : Radius.circular(30),
               right: isLeft ? Radius.circular(30) : Radius.zero,
             ),
-            child: Icon(
-              icon,
-              color: Color(0xFF2E7D32),
-              size: 30,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: isLeft ? null : 16,
+                  right: isLeft ? 16 : null,
+                  top: 10,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: Padding(
+                      padding: EdgeInsets.all(6),
+                      child: Image.asset(
+                        icon == Icons.water_drop
+                            ? 'assets/images/kettle.png'
+                            : icon == Icons.eco
+                                ? 'assets/images/fer.png'
+                                : icon == Icons.book
+                                    ? 'assets/images/tujian.png'
+                                    : 'assets/images/task.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -234,7 +264,7 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
         child: Container(
           padding: EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withOpacity(0.9),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
@@ -243,7 +273,7 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
               Icon(
                 Icons.eco,
                 size: 60,
-                color: Color(0xFF2E7D32),
+                color: AppTheme.customGreen,
               ),
               SizedBox(height: 16),
               Text(
@@ -251,21 +281,23 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2E7D32),
+                  color: Colors.black,
                 ),
               ),
               SizedBox(height: 16),
               TextField(
                 controller: controller,
+                style: TextStyle(color: Colors.black),
                 decoration: InputDecoration(
                   labelText: '给植物取个名字吧',
+                  labelStyle: TextStyle(color: Colors.black54),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Color(0xFF2E7D32),
+                      color: AppTheme.customGreen,
                       width: 2,
                     ),
                   ),
@@ -296,7 +328,7 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF2E7D32),
+                      backgroundColor: AppTheme.customGreen,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -305,7 +337,10 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
                         vertical: 12,
                       ),
                     ),
-                    child: Text('开始种植'),
+                    child: Text(
+                      '开始种植',
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ),
                 ],
               ),
@@ -320,40 +355,82 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Color(0xFFF0F9E6),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Padding(
-          padding: EdgeInsets.all(20),
+        child: Container(
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.water_drop, color: Color(0xFF2E7D32), size: 40),
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFAEC3AC),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Image.asset(
+                    'assets/images/kettle.png',
+                  ),
+                ),
+              ),
               SizedBox(height: 16),
-              Text('确定要给植物浇水吗？',
-                  style: TextStyle(fontSize: 18, color: Color(0xFF2E7D32))),
-              SizedBox(height: 20),
+              Text(
+                '浇水',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '确定要给植物浇水吗？',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text('取消', style: TextStyle(color: Colors.grey)),
+                    child: Text(
+                      '取消',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       setState(() => _plant.waterLevel = 100);
                       Navigator.pop(context);
-                      _checkAndProduceFruit(); // 检查是否产生果实
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF2E7D32),
+                      backgroundColor: Color(0xFFAEC3AC),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
                     ),
-                    child: Text('确定', style: TextStyle(color: Colors.white)),
+                    child: Text(
+                      '确定',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -369,31 +446,69 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
       showDialog(
         context: context,
         builder: (context) => Dialog(
-          backgroundColor: Color(0xFFF0F9E6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Padding(
-            padding: EdgeInsets.all(20),
+          child: Container(
+            padding: EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(20),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.error_outline, color: Colors.orange, size: 40),
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFAEC3AC),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Image.asset(
+                      'assets/images/fer.png',
+                    ),
+                  ),
+                ),
                 SizedBox(height: 16),
-                Text('肥料不足',
-                    style: TextStyle(fontSize: 18, color: Color(0xFF2E7D32))),
-                Text('请完成任务获取肥料！',
-                    style: TextStyle(color: Color(0xFF2E7D32))),
-                SizedBox(height: 20),
+                Text(
+                  '肥料不足',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '请完成任务获取肥料！',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF2E7D32),
+                    backgroundColor: Color(0xFFAEC3AC),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
                   ),
-                  child: Text('确定', style: TextStyle(color: Colors.white)),
+                  child: Text(
+                    '确定',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -403,49 +518,78 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
       return;
     }
 
-    // 有肥料时的对话框
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Color(0xFFF0F9E6),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Padding(
-          padding: EdgeInsets.all(20),
+        child: Container(
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.eco, color: Color(0xFF2E7D32), size: 40),
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFAEC3AC),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Image.asset(
+                    'assets/images/fer.png',
+                  ),
+                ),
+              ),
               SizedBox(height: 16),
-              Text('确定要给植物施肥吗？',
-                  style: TextStyle(fontSize: 18, color: Color(0xFF2E7D32))),
-              Text('剩余肥料：${_plant.fertilizer}',
-                  style: TextStyle(color: Color(0xFF2E7D32))),
-              SizedBox(height: 20),
+              Text(
+                '施肥',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '确定要给植物施肥吗？（剩余肥料：${_plant.fertilizer}）',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text('取消', style: TextStyle(color: Colors.grey)),
+                    child: Text(
+                      '取消',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ),
-                  ElevatedButton(
+                  TextButton(
                     onPressed: () {
                       setState(() {
                         _plant.fertilizerLevel = 100;
                         _plant.fertilizer--;
                       });
                       Navigator.pop(context);
-                      _checkAndProduceFruit(); // 检查是否产生果实
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF2E7D32),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    child: Text(
+                      '确定',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: Text('确定', style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
@@ -460,40 +604,69 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Color(0xFFF0F9E6),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Padding(
-          padding: EdgeInsets.all(20),
+        child: Container(
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.book, color: Color(0xFF2E7D32), size: 40),
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFAEC3AC),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Image.asset(
+                    'assets/images/tujian.png',
+                  ),
+                ),
+              ),
               SizedBox(height: 16),
-              Text('果实图鉴',
-                  style: TextStyle(fontSize: 18, color: Color(0xFF2E7D32))),
-              SizedBox(height: 16),
-              _plant.collectedFruits.isEmpty
-                  ? Text('暂未收集到果实',
-                      style: TextStyle(color: Color(0xFF2E7D32)))
-                  : Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: _plant.collectedFruits
-                          .map((fruit) => _buildFruitItem(fruit))
-                          .toList(),
-                    ),
-              SizedBox(height: 20),
+              Text(
+                '果实图鉴',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '暂未收集到果实',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                ),
+              ),
+              SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF2E7D32),
+                  backgroundColor: Color(0xFFAEC3AC),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 12,
+                  ),
                 ),
-                child: Text('确定', style: TextStyle(color: Colors.white)),
+                child: Text(
+                  '确定',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -506,77 +679,122 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Color(0xFFF0F9E6), // 浅绿色背景
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Padding(
-          padding: EdgeInsets.all(20),
+        child: Container(
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: Icon(Icons.water_drop, color: Color(0xFF2E7D32)),
-                title: Text('每日浇水'),
-                subtitle: Text('奖励：1个肥料'),
-                trailing: TextButton(
-                  onPressed: () {
-                    setState(() => _plant.fertilizer++);
-                    Navigator.pop(context);
-                  },
-                  child: Text('完成', style: TextStyle(color: Color(0xFF2E7D32))),
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFAEC3AC),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Image.asset(
+                    'assets/images/task.png',
+                  ),
                 ),
               ),
-              Divider(color: Colors.green.withOpacity(0.2)),
-              ListTile(
-                leading: Icon(Icons.post_add, color: Color(0xFF2E7D32)),
-                title: Text('发布帖子'),
-                subtitle: Text('奖励：2个肥料'),
-                trailing: TextButton(
-                  onPressed: () {
-                    setState(() => _plant.fertilizer += 2);
-                    Navigator.pop(context);
-                  },
-                  child: Text('完成', style: TextStyle(color: Color(0xFF2E7D32))),
+              SizedBox(height: 16),
+              Text(
+                '每日任务',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 16),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                  ),
+                ),
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '今日格言',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '今天也要好好照顾植物哦！',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                  ),
+                ),
+                child: ListTile(
+                  title: Text(
+                    '每日浇水',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 16,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '奖励：1个肥料',
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: 14,
+                    ),
+                  ),
+                  trailing: ElevatedButton(
+                    onPressed: () {
+                      setState(() => _plant.fertilizer++);
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFFAEC3AC),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      '完成',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  void _checkAndProduceFruit() {
-    if (_plant.waterLevel > 80 && _plant.fertilizerLevel > 80) {
-      final random = Random();
-      if (random.nextDouble() < 0.3) { // 30% 的概率产生果实
-        setState(() {
-          // 这里可以根据后端数据设置不同的果实
-          final newFruit = '橘子${_plant.collectedFruits.length + 1}';
-          _plant.collectedFruits = [..._plant.collectedFruits, newFruit];
-        });
-        
-        // 显示获得果实的提示
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('恭喜！你收获了一个新的果实！'),
-            backgroundColor: Color(0xFF2E7D32),
-          ),
-        );
-      }
-    }
-  }
-
-  Widget _buildFruitItem(String fruit) {
-    return Container(
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Color(0xFF2E7D32)),
-      ),
-      child: Text(fruit, style: TextStyle(color: Color(0xFF2E7D32))),
     );
   }
 }

@@ -4,8 +4,8 @@ class VirtualPlant {
   int days;  // 陪伴天数
   double waterLevel;  // 水分等级 0-100
   double fertilizerLevel;  // 肥料等级 0-100
-  List<String> collectedFruits;  // 已收集的果实
   int fertilizer;  // 拥有的肥料数量
+  List<String> collectedFruits;  // 已收集的果实
   final DateTime lastWatered;  // 上次浇水时间
   final DateTime lastFertilized;  // 上次施肥时间
 
@@ -13,13 +13,14 @@ class VirtualPlant {
     this.name = '',
     this.isPlanted = false,
     this.days = 0,
-    this.waterLevel = 80,
-    this.fertilizerLevel = 70,
-    this.collectedFruits = const [],
-    this.fertilizer = 5,
+    this.waterLevel = 100,
+    this.fertilizerLevel = 100,
+    this.fertilizer = 3,
+    List<String>? collectedFruits,
     DateTime? lastWatered,
     DateTime? lastFertilized,
-  }) : lastWatered = lastWatered ?? DateTime.now(),
+  }) : collectedFruits = collectedFruits ?? [],
+       lastWatered = lastWatered ?? DateTime.now(),
        lastFertilized = lastFertilized ?? DateTime.now();
 
   VirtualPlant copyWith({
@@ -28,8 +29,8 @@ class VirtualPlant {
     int? days,
     double? waterLevel,
     double? fertilizerLevel,
-    List<String>? collectedFruits,
     int? fertilizer,
+    List<String>? collectedFruits,
   }) {
     return VirtualPlant(
       name: name ?? this.name,
@@ -37,8 +38,8 @@ class VirtualPlant {
       days: days ?? this.days,
       waterLevel: waterLevel ?? this.waterLevel,
       fertilizerLevel: fertilizerLevel ?? this.fertilizerLevel,
-      collectedFruits: collectedFruits ?? this.collectedFruits,
       fertilizer: fertilizer ?? this.fertilizer,
+      collectedFruits: collectedFruits ?? this.collectedFruits,
     );
   }
 }

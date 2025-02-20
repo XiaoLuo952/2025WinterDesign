@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+
+const Color titleGreen = Color(0x3B78DF73);  // #78DF733B
 
 class PostDetailPage extends StatefulWidget {
   const PostDetailPage({Key? key}) : super(key: key);
@@ -68,139 +71,151 @@ class _PostDetailPageState extends State<PostDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Color(0xFFB1DF0B),
+        backgroundColor: AppTheme.customGreen,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
           children: [
             CircleAvatar(
               radius: 16,
-              backgroundColor: Colors.green[200],
-              child: Icon(Icons.person, size: 20, color: Colors.green[900]),
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, color: AppTheme.customGreen),
             ),
             SizedBox(width: 8),
-            Text('用户名', style: TextStyle(fontSize: 16)),
+            Text('作者昵称', style: TextStyle(color: Colors.white, fontSize: 16)),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () {},
-            child: Text('关注', style: TextStyle(color: Colors.white)),
+            child: Text(
+              '关注',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 图片区域
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: Container(
-                      color: Colors.green[100],
-                      child: Icon(Icons.image, size: 100, color: Colors.green),
-                    ),
-                  ),
-                  // 标题和正文
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '帖子标题',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text('这里是帖子正文内容...'),
-                        SizedBox(height: 8),
-                        Text(
-                          '2024-03-20 12:00',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Divider(),
-                  // 评论区
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('共 $_commentCount 条评论'),
-                        SizedBox(height: 16),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: 5,
-                          itemBuilder: (context, index) => _buildCommentItem(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/background.png'),
+            fit: BoxFit.cover,
           ),
-          // 底部评论栏
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey[300]!)),
-            ),
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: _showCommentSheet,
+        ),
+        child: Stack(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 图片区域
+                    AspectRatio(
+                      aspectRatio: 1,
                       child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text('说点什么...'),
+                        color: Colors.green[100],
+                        child: Icon(Icons.image, size: 100, color: Colors.green),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      _isLiked ? Icons.favorite : Icons.favorite_border,
-                      color: _isLiked ? Colors.red : null,
+                    // 标题和正文
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '帖子标题',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text('这里是帖子正文内容...'),
+                          SizedBox(height: 8),
+                          Text(
+                            '2024-03-20 12:00',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _isLiked = !_isLiked;
-                        _likeCount += _isLiked ? 1 : -1;
-                      });
-                    },
-                  ),
-                  if (_likeCount > 0) Text('$_likeCount'),
-                  IconButton(
-                    icon: Icon(Icons.comment_outlined),
-                    onPressed: _showCommentSheet,
-                  ),
-                  Text('$_commentCount'),
-                ],
+                    Divider(),
+                    // 评论区
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('共 $_commentCount 条评论'),
+                          SizedBox(height: 16),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: 5,
+                            itemBuilder: (context, index) => _buildCommentItem(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+            // 底部互动栏
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.customGreen,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: '写下你的评论...',
+                          hintStyle: TextStyle(color: Colors.white70),
+                          border: InputBorder.none,
+                        ),
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        _buildInteractionButton(
+                          icon: Icons.favorite,
+                          count: _likeCount,
+                          isActive: _isLiked,
+                          onTap: () {
+                            setState(() {
+                              _isLiked = !_isLiked;
+                              _likeCount += _isLiked ? 1 : -1;
+                            });
+                          },
+                        ),
+                        SizedBox(width: 16),
+                        _buildInteractionButton(
+                          icon: Icons.comment,
+                          count: _commentCount,
+                          onTap: _showCommentSheet,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -235,6 +250,31 @@ class _PostDetailPageState extends State<PostDetailPage> {
               ),
               Text('0', style: TextStyle(fontSize: 12)),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInteractionButton({
+    required IconData icon,
+    required int count,
+    bool isActive = false,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: isActive ? Colors.red : Colors.white,
+            size: 20,
+          ),
+          SizedBox(width: 4),
+          Text(
+            count.toString(),
+            style: TextStyle(color: Colors.white),
           ),
         ],
       ),
