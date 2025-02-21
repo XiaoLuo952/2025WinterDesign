@@ -3,6 +3,8 @@ import '../theme/app_theme.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'edit_profile_page.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -14,6 +16,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    // 获取用户信息
+    final user = context.watch<UserProvider>().currentUser;
+    final nickname = user?.nickname ?? '未设置昵称';
+    final avatar = user?.avatar;
+
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
@@ -79,7 +86,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       padding: EdgeInsets.fromLTRB(160, 20, 20, 20),
                       child: Text(
-                        '用户名',
+                        nickname,
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -111,10 +118,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         child: CircleAvatar(
                           backgroundColor: Colors.white,
-                          backgroundImage: _avatarFile != null
-                              ? FileImage(_avatarFile!)
+                          backgroundImage: avatar != null 
+                              ? NetworkImage(avatar)
                               : null,
-                          child: _avatarFile == null
+                          child: avatar == null
                               ? Icon(
                                   Icons.person,
                                   size: 60,
@@ -407,6 +414,18 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // 添加一个通用的默认头像组件
+  Widget _buildDefaultAvatar({double size = 60}) {
+    return CircleAvatar(
+      backgroundColor: Colors.white,
+      child: Icon(
+        Icons.person,
+        size: size,
+        color: AppTheme.customGreen,
       ),
     );
   }

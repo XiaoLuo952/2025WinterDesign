@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart';
 import '../theme/app_theme.dart';
+import '../services/user_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import '../models/user.dart';
+import 'dart:io';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key}) : super(key: key);
@@ -11,12 +15,95 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final _nameController = TextEditingController(text: '用户名');
-  final _bioController = TextEditingController(text: '这个人很懒，什么都没写~');
+  late TextEditingController _nameController;
+  late TextEditingController _bioController;
   final _locationController = TextEditingController();
   final _birthdayController = TextEditingController();
   String _gender = '选择性别';
   final ImagePicker _picker = ImagePicker();
+  final UserService _userService = UserService();
+  File? _avatarFile;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _bioController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserProfile();
+    });
+  }
+
+  Future<void> _loadUserProfile() async {
+    final userId = Provider.of<UserProvider>(context, listen: false).currentUserId;
+    if (userId == null) return;
+
+    try {
+      final response = await _userService.getUserProfile(userId);
+      if (response.code == 200) {
+        final user = response.data as User;
+        setState(() {
+          _nameController.text = user.nickname ?? '未设置昵称';
+          _bioController.text = user.bio ?? '这个人很懒，什么都没写~';
+          if (user.gender != null) {
+            _gender = user.gender!;
+          }
+          if (user.birthday != null) {
+            _birthdayController.text = user.birthday!;
+          }
+          if (user.location != null) {
+            _locationController.text = user.location!;
+          }
+        });
+      }
+    } catch (e) {
+      print('加载用户资料失败: $e');
+    }
+  }
+
+  Future<void> _pickAvatar() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _avatarFile = File(image.path);
+      });
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    try {
+      final response = await _userService.updateUserProfile(
+        nickname: _nameController.text,
+        bio: _bioController.text,
+        gender: _gender == '选择性别' ? null : _gender,
+        birthday: _birthdayController.text.isEmpty ? null : _birthdayController.text,
+        location: _locationController.text.isEmpty ? null : _locationController.text,
+        avatar: _avatarFile,
+      );
+
+      if (response.code == 200) {
+        final user = response.data as User;
+        final token = Provider.of<UserProvider>(context, listen: false).token;
+        if (token != null) {
+          Provider.of<UserProvider>(context, listen: false).setUserAndToken(user, token);
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('保存成功')),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.msg)),
+        );
+      }
+    } catch (e) {
+      print('保存用户资料失败: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('保存失败')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,9 +210,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: _saveProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.customGreen,
                     shape: RoundedRectangleBorder(

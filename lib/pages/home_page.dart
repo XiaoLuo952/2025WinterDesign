@@ -12,6 +12,8 @@ import '../models/plant.dart';
 import '../services/plant_service.dart';
 import 'virtual_plant_page.dart';
 import '../theme/app_theme.dart';
+import '../providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -156,13 +158,23 @@ class _HomePageState extends State<HomePage> {
           },
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: CircleAvatar(
-              backgroundColor: Colors.green[200],
-              child: Icon(
-                Icons.person,
-                color: Colors.green[900],
-                size: 24,
-              ),
+            child: Consumer<UserProvider>(
+              builder: (context, userProvider, child) {
+                final avatar = userProvider.currentUser?.avatar;
+                return CircleAvatar(
+                  backgroundColor: Colors.white,
+                  backgroundImage: avatar != null 
+                      ? NetworkImage(avatar)
+                      : null,
+                  child: avatar == null
+                      ? Icon(
+                          Icons.person,
+                          size: 24,
+                          color: AppTheme.customGreen,
+                        )
+                      : null,
+                );
+              },
             ),
           ),
         ),

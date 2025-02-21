@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:planter_demo/services/user_service.dart';
+import '../models/auth_response.dart';
+import '../models/user.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -38,30 +42,36 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await _userService.login(
+      final loginResponse = await _userService.login(
         _phoneController.text,
         _codeController.text,
       );
 
-      if (response.code == 0) {
-        // 登录成功
-        // 保存token到本地存储
-        // await Storage.saveToken(response.data!.token);
-        Navigator.pushReplacementNamed(context, '/home');
+      if (loginResponse.code == 200) {
+        final authData = loginResponse.data as AuthResponse;
+        final userResponse = await _userService.getUserProfile(authData.user.userId);
+        
+        if (userResponse.code == 200) {
+          final user = userResponse.data as User;
+          context.read<UserProvider>().setUserAndToken(
+            user,
+            authData.token,
+          );
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(userResponse.msg)),
+          );
+        }
       } else {
-        // 登录失败
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.msg)),
+          SnackBar(content: Text(loginResponse.msg)),
         );
-        // 不要导航到主页
-        return;
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text('登录失败：${e.toString()}')),
       );
-      // 不要导航到主页
-      return;
     } finally {
       setState(() => _isLoading = false);
     }
@@ -81,12 +91,8 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (response.code == 200) {
-        // 显示 Mock 服务返回的完整消息，这样我们就能看到验证码
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response.msg), // 这里会显示包含验证码的完整消息
-            duration: Duration(seconds: 10), // 延长显示时间，方便查看
-          ),
+          SnackBar(content: Text('验证码已发送')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -339,15 +345,6 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () =>
-                        Navigator.pushReplacementNamed(context, '/home'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Color(0xFF2E7D32),
-                    ),
-                    child: const Text('暂不登录，直接进入'),
                   ),
                 ],
               ),

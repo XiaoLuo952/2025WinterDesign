@@ -1,17 +1,24 @@
 import 'package:dio/dio.dart';
+import '../config/app_config.dart';
 
 class ApiService {
-  static final ApiService _instance = ApiService._internal();
-  factory ApiService() => _instance;
-  ApiService._internal();
-
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'https://apifoxmock.com/m1/5849282-5535156-default',
-    connectTimeout: Duration(seconds: 5),
-    receiveTimeout: Duration(seconds: 3),
-    contentType: 'application/json',
-    responseType: ResponseType.json,
-  ));
+  final Dio _dio;
+  
+  ApiService() : _dio = Dio() {
+    _dio.options.baseUrl = AppConfig.baseUrl;
+    _dio.options.connectTimeout = Duration(seconds: 30);
+    _dio.options.receiveTimeout = Duration(seconds: 30);
+    _dio.options.sendTimeout = Duration(seconds: 30);
+    
+    _dio.interceptors.add(LogInterceptor(
+      request: true,
+      requestHeader: true,
+      requestBody: true,
+      responseHeader: true,
+      responseBody: true,
+      error: true,
+    ));
+  }
 
   // 添加请求拦截器，用于统一添加token等认证信息
   void init() {
@@ -47,28 +54,53 @@ class ApiService {
   }
 
   // POST 请求封装
-  Future<T> post<T>(
+  Future<Map<String, dynamic>> post(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
-    Options? options,
   }) async {
     try {
-      print('请求地址: ${_dio.options.baseUrl}$path');  // 添加调试输出
-      print('请求参数: $data');  // 添加调试输出
-      
-      final response = await _dio.post(
+      final response = await _dio.post<Map<String, dynamic>>(
         path,
         data: data,
         queryParameters: queryParameters,
+      );
+      return response.data ?? {};
+    } catch (e) {
+      print('请求错误: $e');
+      rethrow;
+    }
+  }
+
+  // PUT 请求封装
+  Future<Map<String, dynamic>> put(
+    String path, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
+    String? token,
+  }) async {
+    try {
+      // 创建 FormData
+      FormData formData = FormData.fromMap(data ?? {});
+      
+      // 设置请求头
+      final options = Options(
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+          'Content-Type': 'multipart/form-data',
+        },
+      );
+
+      final response = await _dio.put(
+        path,
+        data: formData,
+        queryParameters: queryParameters,
         options: options,
       );
-      
-      print('响应数据: ${response.data}');  // 添加调试输出
       return response.data;
     } catch (e) {
-      print('请求错误: $e');  // 添加调试输出
-      throw _handleError(e);
+      print('PUT请求错误: $e');
+      rethrow;
     }
   }
 
