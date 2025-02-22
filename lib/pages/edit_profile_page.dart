@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../models/user.dart';
 import 'dart:io';
+import '../config/app_config.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key}) : super(key: key);

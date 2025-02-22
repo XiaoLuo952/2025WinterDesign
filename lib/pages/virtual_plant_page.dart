@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/virtual_plant.dart';
 import '../theme/app_theme.dart';
+import '../services/virtual_plant_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 
 class VirtualPlantPage extends StatefulWidget {
   @override
@@ -255,6 +258,8 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
 
   void _showPlantDialog() {
     final controller = TextEditingController();
+    final token = Provider.of<UserProvider>(context, listen: false).token;
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -315,8 +320,26 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {
-                      if (controller.text.isNotEmpty) {
+                    onPressed: () async {
+                      if (controller.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('请输入植物名称')),
+                        );
+                        return;
+                      }
+
+                      if (token == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('请先登录')),
+                        );
+                        return;
+                      }
+
+                      final response = await VirtualPlantService()
+                          .createVirtualPlant(controller.text, token);
+
+                      if (response.code == 200) {
+                        print('创建成功，返回数据: ${response.data}');
                         setState(() {
                           _plant = _plant.copyWith(
                             name: controller.text,
@@ -325,6 +348,10 @@ class _VirtualPlantPageState extends State<VirtualPlantPage> {
                           );
                         });
                         Navigator.pop(context);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(response.msg)),
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(

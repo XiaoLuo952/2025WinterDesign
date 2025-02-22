@@ -8,8 +8,8 @@ import 'dart:io';
 import '../providers/user_provider.dart';
 import 'package:dio/dio.dart';
 import '../main.dart';
-import '../config/app_config.dart';
 import 'package:http_parser/http_parser.dart';
+import '../config/app_config.dart';
 
 class UserService {
   final ApiService _apiService = ApiService();
@@ -27,10 +27,13 @@ class UserService {
 
       if (response['code'] == 200) {
         final data = response['data'] as Map<String, dynamic>;
+        final authResponse = AuthResponse.fromJson(data);
+        // 设置全局 token
+        _apiService.setToken(authResponse.token);
         return ApiResponse(
           code: 200,
           msg: response['message'] ?? '登录成功',
-          data: AuthResponse.fromJson(data),
+          data: authResponse,
         );
       } else {
         return ApiResponse(
@@ -102,13 +105,6 @@ class UserService {
     File? avatar,
   }) async {
     try {
-      // 获取 token
-      final token = Provider.of<UserProvider>(navigatorKey.currentContext!, listen: false).token;
-      if (token == null) {
-        return ApiResponse(code: -1, msg: '未登录');
-      }
-
-      // 准备请求数据
       final Map<String, dynamic> data = {
         if (nickname != null) 'nickname': nickname,
         if (bio != null) 'bio': bio,
@@ -117,7 +113,6 @@ class UserService {
         if (location != null) 'location': location,
       };
 
-      // 如果有头像文件，添加到请求中
       if (avatar != null) {
         String fileName = avatar.path.split('/').last;
         data['avatar'] = await MultipartFile.fromFile(
@@ -130,7 +125,6 @@ class UserService {
       final response = await _apiService.put(
         '/api/users/profile',
         data: data,
-        token: token,
       );
 
       print('更新用户资料返回数据: $response');
@@ -157,6 +151,62 @@ class UserService {
       }
     } catch (e) {
       print('更新用户资料失败: $e');
+      return ApiResponse(code: -1, msg: '网络错误');
+    }
+  }
+
+  Future<ApiResponse> followUser(int userId) async {
+    try {
+      final response = await _apiService.post('/api/users/$userId/follow');
+      return ApiResponse(
+        code: response['code'] ?? -1,
+        msg: response['msg'] ?? '关注失败',
+        data: response['data'],
+      );
+    } catch (e) {
+      print('关注用户失败: $e');
+      return ApiResponse(code: -1, msg: '网络错误');
+    }
+  }
+
+  Future<ApiResponse> unfollowUser(int userId) async {
+    try {
+      final response = await _apiService.delete('/api/users/$userId/follow');
+      return ApiResponse(
+        code: response['code'] ?? -1,
+        msg: response['msg'] ?? '取消关注失败',
+        data: response['data'],
+      );
+    } catch (e) {
+      print('取消关注失败: $e');
+      return ApiResponse(code: -1, msg: '网络错误');
+    }
+  }
+
+  Future<ApiResponse> getFollowers(int userId) async {
+    try {
+      final response = await _apiService.get('/api/users/$userId/followers');
+      return ApiResponse(
+        code: response['code'] ?? -1,
+        msg: response['msg'] ?? '获取失败',
+        data: response['data']?['items'] ?? [],  // 直接返回 items 数组
+      );
+    } catch (e) {
+      print('获取粉丝列表失败: $e');
+      return ApiResponse(code: -1, msg: '网络错误');
+    }
+  }
+
+  Future<ApiResponse> getFollowing(int userId) async {
+    try {
+      final response = await _apiService.get('/api/users/$userId/following');
+      return ApiResponse(
+        code: response['code'] ?? -1,
+        msg: response['msg'] ?? '获取失败',
+        data: response['data']?['items'] ?? [],  // 直接返回 items 数组
+      );
+    } catch (e) {
+      print('获取关注列表失败: $e');
       return ApiResponse(code: -1, msg: '网络错误');
     }
   }

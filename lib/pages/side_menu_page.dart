@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'follow_page.dart';
 
 class SideMenuPage extends StatelessWidget {
   const SideMenuPage({Key? key}) : super(key: key);
@@ -46,6 +47,21 @@ class SideMenuPage extends StatelessWidget {
                 title: '帮助',
                 onTap: () {
                   // 处理帮助
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.people_outline,
+                title: '我的粉丝',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FollowPage(
+                        title: '我的粉丝',
+                        type: 'followers',  // 用于区分是粉丝列表还是关注列表
+                      ),
+                    ),
+                  );
                 },
               ),
             ],

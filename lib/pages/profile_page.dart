@@ -1,3 +1,4 @@
+import '../config/app_config.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'dart:io';
@@ -5,6 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'edit_profile_page.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
+import '../services/user_service.dart';
+import '../models/user.dart';
+import 'follow_page.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -12,7 +16,58 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final ImagePicker _picker = ImagePicker();
+  final UserService _userService = UserService();
   File? _avatarFile;
+
+  Future<void> _pickAndUpdateAvatar() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        // 更新用户资料，只更新头像
+        final response = await _userService.updateUserProfile(
+          avatar: File(image.path),
+        );
+
+        if (response.code == 200) {
+          final user = response.data as User;
+          final token = Provider.of<UserProvider>(context, listen: false).token;
+          if (token != null) {
+            // 确保更新的用户信息包含所有原有信息
+            final currentUser =
+                Provider.of<UserProvider>(context, listen: false).currentUser;
+            final updatedUser = User(
+              userId: user.userId,
+              phone: user.phone,
+              nickname: user.nickname ?? currentUser?.nickname, // 保留原有昵称
+              avatar: user.avatar,
+              bio: user.bio ?? currentUser?.bio, // 保留原有简介
+              gender: user.gender ?? currentUser?.gender, // 保留原有性别
+              birthday: user.birthday ?? currentUser?.birthday, // 保留原有生日
+              location: user.location ?? currentUser?.location, // 保留原有位置
+              followersCount: user.followersCount,
+              followingCount: user.followingCount,
+              likesCount: user.likesCount,
+            );
+            Provider.of<UserProvider>(context, listen: false)
+                .setUserAndToken(updatedUser, token);
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('头像更新成功')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response.msg)),
+          );
+        }
+      }
+    } catch (e) {
+      print('更新头像失败: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('更新头像失败')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,13 +87,14 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           // 底部地球图片
           Positioned(
-            bottom: -150,  // 往下移一点，从-100改为-150
+            bottom: -150, // 往下移一点，从-100改为-150
             left: 0,
             right: 0,
             child: Opacity(
-              opacity: 0.6,  // 设置透明度
-              child: SizedBox(  // 添加 SizedBox 来控制图片大小
-                height: 400,    // 设置合适的高度
+              opacity: 0.6, // 设置透明度
+              child: SizedBox(
+                // 添加 SizedBox 来控制图片大小
+                height: 400, // 设置合适的高度
                 child: Image.asset(
                   'assets/images/earth.png',
                   fit: BoxFit.contain,
@@ -99,7 +155,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     left: 20,
                     top: 100,
                     child: GestureDetector(
-                      onTap: _showAvatarOptions,
+                      onTap: _pickAndUpdateAvatar,
                       child: Container(
                         width: 120,
                         height: 120,
@@ -118,9 +174,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         child: CircleAvatar(
                           backgroundColor: Colors.white,
-                          backgroundImage: avatar != null 
+                          backgroundImage: avatar != null
                               ? NetworkImage(avatar)
-                              : null,
+                              : AssetImage('assets/images/default_avatar.png')
+                                  as ImageProvider,
                           child: avatar == null
                               ? Icon(
                                   Icons.person,
@@ -147,9 +204,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 onTap: () => _showLikedPosts(context),
               ),
               _buildOptionTile(
-                icon: Icons.article_outlined,
-                title: '我的帖子',
-                onTap: () => _showMyPosts(context),
+                icon: Icons.people_outline,
+                title: '我的粉丝',
+                onTap: () => _showMyFans(context),
               ),
               _buildOptionTile(
                 icon: Icons.settings_outlined,
@@ -187,7 +244,18 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showFollowingList(BuildContext context) {
+  void _showFollowingList(BuildContext context) async {
+    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('请先登录')),
+      );
+      return;
+    }
+
+    final response = await _userService.getFollowing(user.userId);
+    if (!mounted) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -203,26 +271,38 @@ class _ProfilePageState extends State<ProfilePage> {
                 fit: BoxFit.cover,
               ),
             ),
-            child: ListView.builder(
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.green[100],
-                    child: Icon(Icons.person, color: AppTheme.customGreen),
-                  ),
-                  title: Text('用户 ${index + 1}'),
-                  subtitle: Text('个性签名'),
-                  trailing: TextButton(
-                    onPressed: () {},
-                    child: Text('已关注'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppTheme.customGreen,
-                    ),
-                  ),
-                );
-              },
-            ),
+            child: response.code == 200
+                ? ListView.builder(
+                    itemCount: response.data.length,
+                    itemBuilder: (context, index) {
+                      final followedUser = response.data[index];
+                      // 处理头像 URL
+                      if (followedUser['avatar'] != null) {
+                        followedUser['avatar'] = followedUser['avatar']
+                                .startsWith('http')
+                            ? followedUser['avatar']
+                            : '${AppConfig.baseUrl}${followedUser['avatar']}';
+                      }
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: followedUser['avatar'] != null
+                              ? NetworkImage(followedUser['avatar'])
+                              : AssetImage('assets/images/default_avatar.png')
+                                  as ImageProvider,
+                        ),
+                        title: Text(followedUser['nickname'] ?? '用户'),
+                        subtitle: Text(followedUser['bio'] ?? ''),
+                        trailing: TextButton(
+                          onPressed: () {},
+                          child: Text('已关注'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppTheme.customGreen,
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                : Center(child: Text(response.msg)),
           ),
         ),
       ),
@@ -264,13 +344,24 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showMyPosts(BuildContext context) {
+  void _showMyFans(BuildContext context) async {
+    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('请先登录')),
+      );
+      return;
+    }
+
+    final response = await _userService.getFollowers(user.userId);
+    if (!mounted) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => Scaffold(
           appBar: AppBar(
-            title: Text('我的帖子'),
+            title: Text('我的粉丝'),
             backgroundColor: AppTheme.customGreen,
           ),
           body: Container(
@@ -280,42 +371,31 @@ class _ProfilePageState extends State<ProfilePage> {
                 fit: BoxFit.cover,
               ),
             ),
-            child: ListView.builder(
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return Card(
-                  margin: EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ListTile(
-                        title: Text('帖子标题 ${index + 1}'),
-                        subtitle: Text('发布时间: 2024-03-20'),
-                        trailing: PopupMenuButton(
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              child: Text('编辑'),
-                              value: 'edit',
-                            ),
-                            PopupMenuItem(
-                              child: Text('删除'),
-                              value: 'delete',
-                            ),
-                          ],
-                          onSelected: (value) {
-                            // 处理编辑或删除
-                          },
+            child: response.code == 200
+                ? ListView.builder(
+                    itemCount: response.data.length,
+                    itemBuilder: (context, index) {
+                      final follower = response.data[index];
+                      // 处理头像 URL
+                      if (follower['avatar'] != null) {
+                        follower['avatar'] =
+                            follower['avatar'].startsWith('http')
+                                ? follower['avatar']
+                                : '${AppConfig.baseUrl}${follower['avatar']}';
+                      }
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: follower['avatar'] != null
+                              ? NetworkImage(follower['avatar'])
+                              : AssetImage('assets/images/default_avatar.png')
+                                  as ImageProvider,
                         ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text('帖子内容...'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                        title: Text(follower['nickname'] ?? '用户'),
+                        subtitle: Text(follower['bio'] ?? ''),
+                      );
+                    },
+                  )
+                : Center(child: Text(response.msg)),
           ),
         ),
       ),
@@ -341,7 +421,8 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               children: [
                 ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   leading: Icon(Icons.edit),
                   title: Text('编辑资料'),
                   trailing: Icon(Icons.chevron_right),
@@ -356,63 +437,24 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 Divider(height: 1),
                 ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   leading: Icon(Icons.exit_to_app),
                   title: Text('退出登录'),
                   onTap: () {
                     // 处理退出登录逻辑
-                    Navigator.pop(context);  // 关闭对话框
-                    Navigator.pop(context);  // 返回上一页
+                    Navigator.pop(context); // 关闭对话框
+                    Navigator.pop(context); // 返回上一页
                     Navigator.pushNamedAndRemoveUntil(
                       context,
                       '/login',
-                      (route) => false,  // 清除所有路由栈
+                      (route) => false, // 清除所有路由栈
                     );
                   },
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showAvatarOptions() async {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.photo_library),
-              title: Text('从相册选择'),
-              onTap: () async {
-                Navigator.pop(context);
-                final image = await ImagePicker().pickImage(
-                  source: ImageSource.gallery,
-                );
-                if (image != null) {
-                  setState(() => _avatarFile = File(image.path));
-                }
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.camera_alt),
-              title: Text('拍照'),
-              onTap: () async {
-                Navigator.pop(context);
-                final image = await ImagePicker().pickImage(
-                  source: ImageSource.camera,
-                );
-                if (image != null) {
-                  setState(() => _avatarFile = File(image.path));
-                }
-              },
-            ),
-          ],
         ),
       ),
     );

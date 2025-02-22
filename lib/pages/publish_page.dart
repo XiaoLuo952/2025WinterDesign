@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
+import 'dart:io';
+import '../services/post_service.dart';
+import '../config/app_config.dart';
 
 class PublishPage extends StatefulWidget {
   const PublishPage({Key? key}) : super(key: key);
@@ -31,6 +34,46 @@ class _PublishPageState extends State<PublishPage> {
       }
     } catch (e) {
       print('Error picking images: $e');
+    }
+  }
+
+  Future<void> _publishPost() async {
+    try {
+      if (_titleController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('请输入标题')),
+        );
+        return;
+      }
+
+      if (_contentController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('请输入内容')),
+        );
+        return;
+      }
+
+      final response = await PostService().createPost(
+        title: _titleController.text,
+        content: _contentController.text,
+        images: _images.map((xFile) => File(xFile.path)).toList(),
+      );
+
+      if (response.code == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('发布成功')),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.msg)),
+        );
+      }
+    } catch (e) {
+      print('发布失败: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('发布失败')),
+      );
     }
   }
 
@@ -67,10 +110,11 @@ class _PublishPageState extends State<PublishPage> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              image.path,
+            child: Image.file(
+              File(image.path),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
+                print('图片加载错误: $error');
                 return Icon(
                   Icons.image_not_supported,
                   size: 40,
@@ -211,10 +255,7 @@ class _PublishPageState extends State<PublishPage> {
               SizedBox(height: 24),
               // 发布按钮
               ElevatedButton(
-                onPressed: () {
-                  // 处理发布逻辑
-                  Navigator.pop(context);
-                },
+                onPressed: _publishPost,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.customGreen,
                   shape: RoundedRectangleBorder(
