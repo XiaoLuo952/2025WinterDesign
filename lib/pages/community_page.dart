@@ -18,8 +18,6 @@ class _CommunityPageState extends State<CommunityPage> {
   @override
   void initState() {
     super.initState();
-    print('CommunityPage initState 被调用');
-    _loadPosts();
   }
 
   Future<void> _loadPosts() async {

@@ -136,6 +136,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 获取键盘高度
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -410,73 +413,67 @@ class _PostDetailPageState extends State<PostDetailPage> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: AppTheme.customGreen, // 修改背景色
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 40,
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: TextField(
-                    controller: _commentController,
-                    decoration: InputDecoration(
-                      hintText: '说点什么...',
-                      border: InputBorder.none,
-                      hintStyle: TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 16),
-              GestureDetector(
-                onTap: () => _toggleLike(),
-                child: Row(
-                  children: [
-                    Icon(
-                      widget.post.isLiked
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      color: widget.post.isLiked ? Colors.red : Colors.white,
-                      size: 24,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      '${widget.post.likesCount}',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 16),
-              Container(
-                height: 40,
-                width: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.send, color: AppTheme.customGreen),
-                  onPressed: _sendComment,
-                ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppTheme.customGreen,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: Offset(0, -2),
               ),
             ],
+          ),
+          child: SafeArea(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: TextField(
+                      controller: _commentController,
+                      decoration: InputDecoration(
+                        hintText: '说点什么...',
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                GestureDetector(
+                  onTap: () => _toggleLike(),
+                  child: Row(
+                    children: [
+                      Icon(
+                        widget.post.isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: widget.post.isLiked ? Colors.red : Colors.white,
+                        size: 24,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        '${widget.post.likesCount}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 16),
+                IconButton(
+                  onPressed: _submitComment,
+                  icon: Icon(Icons.send),
+                  color: Colors.white,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -600,7 +597,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
-  Future<void> _sendComment() async {
+  Future<void> _submitComment() async {
     final comment = _commentController.text.trim();
     if (comment.isEmpty) return;
 

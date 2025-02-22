@@ -79,9 +79,14 @@ class ApiService {
     Map<String, dynamic>? headers,
   }) async {
     try {
+      print('POST 请求详情：');
+      print('URL: $path');
+      print('Body: $data');  // 打印请求体内容
+      print('Headers: $headers');
+
       final response = await _dio.post(
         path,
-        data: data,
+        data: data,  // 这里的 data 会被放在请求体中
         queryParameters: queryParameters,
         options: Options(headers: headers),
       );

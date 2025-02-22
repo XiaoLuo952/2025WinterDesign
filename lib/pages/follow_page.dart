@@ -39,7 +39,11 @@ class _FollowPageState extends State<FollowPage> {
     }
 
     try {
-      final response = await _userService.getFollowers(user.userId);
+      // 根据类型调用不同的 API
+      final response = widget.type == 'followers'
+          ? await _userService.getFollowers(user.userId)
+          : await _userService.getFollowing(user.userId);
+
       if (response.code == 200 && mounted) {
         // 处理头像 URL
         final processedUsers = (response.data as List).map((user) {
@@ -57,7 +61,7 @@ class _FollowPageState extends State<FollowPage> {
         });
       }
     } catch (e) {
-      print('加载用户列表失败: $e');
+      print('加载${widget.type == 'followers' ? '粉丝' : '关注'}列表失败: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -67,28 +71,44 @@ class _FollowPageState extends State<FollowPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,  // 设置为透明
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: AppTheme.customGreen,
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _users.length,
-              itemBuilder: (context, index) {
-                final user = _users[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: user['avatar'] != null
-                        ? NetworkImage(user['avatar'])
-                        : AssetImage('assets/images/default_avatar.png')
-                            as ImageProvider,
-                  ),
-                  title: Text(user['nickname'] ?? '用户'),
-                  subtitle: Text(user['bio'] ?? ''),
-                );
-              },
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/background.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator())
+            : ListView.builder(
+                itemCount: _users.length,
+                itemBuilder: (context, index) {
+                  final user = _users[index];
+                  return Card(
+                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    color: Color(0xFFBCE0BA),  // 使用相同的绿色背景色
+                    shape: RoundedRectangleBorder(  // 添加圆角
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: user['avatar'] != null
+                            ? NetworkImage(user['avatar'])
+                            : AssetImage('assets/images/default_avatar.png')
+                                as ImageProvider,
+                      ),
+                      title: Text(user['nickname'] ?? '用户'),
+                      subtitle: Text(user['bio'] ?? ''),
+                    ),
+                  );
+                },
+              ),
+      ),
     );
   }
 } 

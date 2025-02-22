@@ -19,7 +19,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
   @override
   void initState() {
     super.initState();
-    _loadPosts();
   }
 
   Future<void> _loadPosts() async {

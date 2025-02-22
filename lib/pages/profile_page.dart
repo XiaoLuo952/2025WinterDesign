@@ -173,18 +173,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           ],
                         ),
                         child: CircleAvatar(
-                          backgroundColor: Colors.white,
+                          backgroundColor: Colors.grey[200],  // 使用灰色背景
                           backgroundImage: avatar != null
                               ? NetworkImage(avatar)
-                              : AssetImage('assets/images/default_avatar.png')
-                                  as ImageProvider,
-                          child: avatar == null
-                              ? Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: AppTheme.customGreen,
-                                )
-                              : null,
+                              : AssetImage('assets/images/default_avatar.png') as ImageProvider,
                         ),
                       ),
                     ),
@@ -193,21 +185,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               SizedBox(height: 60),
               // 选项列表
-              _buildOptionTile(
-                icon: Icons.favorite_border,
-                title: '我的关注',
-                onTap: () => _showFollowingList(context),
-              ),
-              _buildOptionTile(
-                icon: Icons.thumb_up_outlined,
-                title: '我的点赞',
-                onTap: () => _showLikedPosts(context),
-              ),
-              _buildOptionTile(
-                icon: Icons.people_outline,
-                title: '我的粉丝',
-                onTap: () => _showMyFans(context),
-              ),
+              _buildOptionButtons(),
               _buildOptionTile(
                 icon: Icons.settings_outlined,
                 title: '设置',
@@ -217,6 +195,43 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildOptionButtons() {
+    return Column(
+      children: [
+        _buildOptionTile(
+          icon: Icons.people_outline,
+          title: '我的粉丝',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FollowPage(
+                  title: '我的粉丝',
+                  type: 'followers',
+                ),
+              ),
+            );
+          },
+        ),
+        _buildOptionTile(
+          icon: Icons.person_outline,
+          title: '我的关注',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FollowPage(
+                  title: '我的关注',
+                  type: 'following',
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -244,162 +259,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showFollowingList(BuildContext context) async {
-    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('请先登录')),
-      );
-      return;
-    }
-
-    final response = await _userService.getFollowing(user.userId);
-    if (!mounted) return;
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: Text('我的关注'),
-            backgroundColor: AppTheme.customGreen,
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: response.code == 200
-                ? ListView.builder(
-                    itemCount: response.data.length,
-                    itemBuilder: (context, index) {
-                      final followedUser = response.data[index];
-                      // 处理头像 URL
-                      if (followedUser['avatar'] != null) {
-                        followedUser['avatar'] = followedUser['avatar']
-                                .startsWith('http')
-                            ? followedUser['avatar']
-                            : '${AppConfig.baseUrl}${followedUser['avatar']}';
-                      }
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: followedUser['avatar'] != null
-                              ? NetworkImage(followedUser['avatar'])
-                              : AssetImage('assets/images/default_avatar.png')
-                                  as ImageProvider,
-                        ),
-                        title: Text(followedUser['nickname'] ?? '用户'),
-                        subtitle: Text(followedUser['bio'] ?? ''),
-                        trailing: TextButton(
-                          onPressed: () {},
-                          child: Text('已关注'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppTheme.customGreen,
-                          ),
-                        ),
-                      );
-                    },
-                  )
-                : Center(child: Text(response.msg)),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showLikedPosts(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: Text('我的点赞'),
-            backgroundColor: AppTheme.customGreen,
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: ListView.builder(
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return Card(
-                  margin: EdgeInsets.all(8),
-                  child: ListTile(
-                    title: Text('帖子标题 ${index + 1}'),
-                    subtitle: Text('帖子内容预览...'),
-                    trailing: Icon(Icons.favorite, color: Colors.red),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showMyFans(BuildContext context) async {
-    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('请先登录')),
-      );
-      return;
-    }
-
-    final response = await _userService.getFollowers(user.userId);
-    if (!mounted) return;
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: Text('我的粉丝'),
-            backgroundColor: AppTheme.customGreen,
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: response.code == 200
-                ? ListView.builder(
-                    itemCount: response.data.length,
-                    itemBuilder: (context, index) {
-                      final follower = response.data[index];
-                      // 处理头像 URL
-                      if (follower['avatar'] != null) {
-                        follower['avatar'] =
-                            follower['avatar'].startsWith('http')
-                                ? follower['avatar']
-                                : '${AppConfig.baseUrl}${follower['avatar']}';
-                      }
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: follower['avatar'] != null
-                              ? NetworkImage(follower['avatar'])
-                              : AssetImage('assets/images/default_avatar.png')
-                                  as ImageProvider,
-                        ),
-                        title: Text(follower['nickname'] ?? '用户'),
-                        subtitle: Text(follower['bio'] ?? ''),
-                      );
-                    },
-                  )
-                : Center(child: Text(response.msg)),
-          ),
-        ),
-      ),
-    );
+  void _showMyPosts(BuildContext context) {
+    // Implementation of _showMyPosts method
   }
 
   void _showSettings(BuildContext context) {

@@ -263,7 +263,14 @@ class _PublishPageState extends State<PublishPage> {
                   ),
                   minimumSize: Size(double.infinity, 48),
                 ),
-                child: Text('发布'),
+                child: Text(
+                  '发布',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
             ],

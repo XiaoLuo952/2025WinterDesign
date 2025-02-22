@@ -57,6 +57,7 @@ class PostService {
     int limit = 10,
   }) async {
     try {
+      print('发送请求，type: $type');
       final response = await _apiService.get(
         '/api/posts',
         queryParameters: {
@@ -66,6 +67,7 @@ class PostService {
         },
       );
 
+      print('请求参数: ${{'type': type, 'page': page, 'limit': limit}}');
       print('获取帖子列表返回数据: $response');
 
       return ApiResponse(

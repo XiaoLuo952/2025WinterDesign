@@ -29,7 +29,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   int _currentIndex = 0; // 底部导航栏索引
   int _topTabIndex = 1; // 顶部标签索引
   List<Plant> _plants = [];
@@ -43,14 +43,37 @@ class _HomePageState extends State<HomePage> {
   ];
   final PostService _postService = PostService();
   List<Post> _posts = [];
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _loadPlants();
-    if (_currentIndex == 0) {
-      _loadPosts();
-    }
+    _tabController = TabController(
+      length: 2, 
+      vsync: this, 
+      initialIndex: _topTabIndex,
+    );
+    
+    // 监听标签切换
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        if (_tabController.index == 0) {
+          _loadPosts(type: 'following');
+        } else if (_tabController.index == 1) {
+          _loadPosts(type: 'discover');
+        }
+      }
+    });
+
+    // 初始加载发现页
+    _loadPosts(type: 'discover');
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPlants() async {
@@ -74,48 +97,12 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       _currentIndex = index;
-      if (index == 0) {
-        _loadPosts();
-      }
     });
   }
 
-  Future<void> _loadPosts() async {
+  Future<void> _loadPosts({required String type}) async {
     try {
-      final response = await _postService.getPosts();
-
-      if (response.code == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final items = data['items'] as List<dynamic>;
-
-        setState(() {
-          _posts = items.map((data) => Post.fromJson(data)).toList();
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  // 添加标签切换方法
-  void _onTabChanged(int index) {
-    setState(() {
-      _topTabIndex = index;
-      if (index == 0) {
-        // 关注
-        _loadFollowingPosts();
-      } else {
-        // 发现
-        _loadPosts();
-      }
-    });
-  }
-
-  // 添加加载关注帖子的方法
-  Future<void> _loadFollowingPosts() async {
-    try {
-      final response = await _postService.getFollowingPosts();
+      final response = await _postService.getPosts(type: type);
       if (response.code == 200) {
         setState(() {
           _posts = (response.data['items'] as List)
@@ -125,7 +112,7 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      print('加载关注用户帖子失败: $e');
+      print('加载帖子失败: $e');
       setState(() => _isLoading = false);
     }
   }
@@ -237,64 +224,34 @@ class _HomePageState extends State<HomePage> {
               builder: (context, userProvider, child) {
                 final avatar = userProvider.currentUser?.avatar;
                 return CircleAvatar(
-                  backgroundColor: Colors.white,
+                  backgroundColor: Colors.grey[200],
                   backgroundImage: avatar != null && avatar.startsWith('http')
                       ? NetworkImage(avatar)
                       : avatar != null
                           ? NetworkImage('${AppConfig.baseUrl}$avatar')
-                          : AssetImage('assets/images/default_avatar.png')
-                              as ImageProvider,
-                  child: avatar == null
-                      ? Icon(
-                          Icons.person,
-                          size: 24,
-                          color: AppTheme.customGreen,
-                        )
-                      : null,
+                          : AssetImage('assets/images/default_avatar.png') as ImageProvider,
                 );
               },
             ),
           ),
         ),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _topTabIndex = 0;
-                });
-              },
-              child: Text(
-                '关注',
-                style: TextStyle(
-                  color: _topTabIndex == 0 ? Colors.black : Colors.grey,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Container(
-              height: 20,
-              width: 1,
-              color: Colors.grey[300],
-              margin: EdgeInsets.symmetric(horizontal: 8),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _topTabIndex = 1;
-                });
-              },
-              child: Text(
-                '发现',
-                style: TextStyle(
-                  color: _topTabIndex == 1 ? Colors.black : Colors.grey,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+        title: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.normal,
+          ),
+          tabs: [
+            Tab(text: '关注'),
+            Tab(text: '发现'),
           ],
         ),
         actions: [SizedBox(width: 48)],
@@ -552,193 +509,177 @@ class _HomePageState extends State<HomePage> {
           fit: BoxFit.cover,
         ),
       ),
-      child: RefreshIndicator(
-        onRefresh: () async {
-          if (mounted) {
-            // 添加检查
-            setState(() {});
-          }
-          return Future.value();
-        },
-        child: FutureBuilder<ApiResponse>(
-          future: _postService.getPosts(),
-          builder: (context, snapshot) {
-            if (!mounted) return Container(); // 添加检查
+      child: TabBarView(
+        controller: _tabController,
+        children: [
+          // 关注页面
+          _buildPostList(),
+          // 发现页面
+          _buildPostList(),
+        ],
+      ),
+    );
+  }
 
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
+  Widget _buildPostList() {
+    return RefreshIndicator(
+      onRefresh: () async {
+        if (mounted) {
+          _loadPosts(type: _tabController.index == 0 ? 'following' : 'discover');
+        }
+        return Future.value();
+      },
+      child: MasonryGridView.count(
+        crossAxisCount: 2,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        padding: EdgeInsets.all(10),
+        itemCount: _posts.length,
+        itemBuilder: (context, index) {
+          final post = _posts[index];
+          double imageHeight = 200;
 
-            if (snapshot.hasError) {
-              return Center(child: Text('加载失败'));
-            }
-
-            if (!snapshot.hasData || snapshot.data?.data == null) {
-              return Center(child: Text('暂无帖子'));
-            }
-
-            try {
-              final data = snapshot.data!.data as Map<String, dynamic>;
-              final items =
-                  (data['items'] as List).cast<Map<String, dynamic>>();
-              final posts = items.map((data) => Post.fromJson(data)).toList();
-
-              return MasonryGridView.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                padding: EdgeInsets.all(10),
-                itemCount: posts.length,
-                itemBuilder: (context, index) {
-                  final post = posts[index];
-                  double imageHeight = 200;
-
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PostDetailPage(post: post),
-                        ),
-                      );
-                    },
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (post.imageUrls.isNotEmpty)
-                            ClipRRect(
-                              borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(12)),
-                              child: Image.network(
-                                post.imageUrls.first,
-                                height: imageHeight,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                cacheWidth: 800,
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Container(
-                                    height: imageHeight,
-                                    color: Colors.grey[200],
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        value: loadingProgress
-                                                    .expectedTotalBytes !=
-                                                null
-                                            ? loadingProgress
-                                                    .cumulativeBytesLoaded /
-                                                loadingProgress
-                                                    .expectedTotalBytes!
-                                            : null,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    height: imageHeight,
-                                    color: Colors.grey[200],
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.image_not_supported,
-                                            size: 40, color: Colors.grey),
-                                        SizedBox(height: 8),
-                                        Text('图片加载失败',
-                                            style:
-                                                TextStyle(color: Colors.grey)),
-                                      ],
-                                    ),
-                                  );
-                                },
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PostDetailPage(post: post),
+                ),
+              );
+            },
+            child: Card(
+              color: Color.fromRGBO(188, 224, 186, 1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (post.imageUrls.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(12)),
+                      child: Image.network(
+                        post.imageUrls.first,
+                        height: imageHeight,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        cacheWidth: 800,
+                        loadingBuilder:
+                            (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            height: imageHeight,
+                            color: Colors.grey[200],
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress
+                                            .expectedTotalBytes !=
+                                        null
+                                    ? loadingProgress
+                                            .cumulativeBytesLoaded /
+                                        loadingProgress
+                                            .expectedTotalBytes!
+                                    : null,
                               ),
                             ),
-                          Padding(
-                            padding: EdgeInsets.all(8),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: imageHeight,
+                            color: Colors.grey[200],
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  post.title,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                Icon(Icons.image_not_supported,
+                                    size: 40, color: Colors.grey),
                                 SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 16,
-                                      backgroundImage: post.authorAvatar !=
-                                                  null &&
-                                              post.authorAvatar!.isNotEmpty &&
-                                              post.authorAvatar!
-                                                  .startsWith('http')
-                                          ? NetworkImage(post.authorAvatar!)
-                                          : AssetImage(
-                                                  'assets/images/default_avatar.png')
-                                              as ImageProvider,
-                                      backgroundColor: Colors.grey[200],
-                                    ),
-                                    SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        post.authorNickname.isNotEmpty
-                                            ? post.authorNickname
-                                            : '匿名用户',
-                                        style: TextStyle(fontSize: 14),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () => _toggleLike(post),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            post.isLiked
-                                                ? Icons.favorite
-                                                : Icons.favorite_border,
-                                            color: post.isLiked
-                                                ? Colors.red
-                                                : Colors.grey,
-                                            size: 20,
-                                          ),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            '${post.likesCount}',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                Text('图片加载失败',
+                                    style:
+                                        TextStyle(color: Colors.grey)),
                               ],
                             ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     ),
-                  );
-                },
-              );
-            } catch (e) {
-              return Center(child: Text('数据格式错误'));
-            }
-          },
-        ),
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          post.title,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Colors.grey[200],
+                              backgroundImage: post.authorAvatar !=
+                                          null &&
+                                      post.authorAvatar!.isNotEmpty &&
+                                      post.authorAvatar!
+                                          .startsWith('http')
+                                  ? NetworkImage(post.authorAvatar!)
+                                  : AssetImage(
+                                          'assets/images/default_avatar.png')
+                                      as ImageProvider,
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                post.authorNickname.isNotEmpty
+                                    ? post.authorNickname
+                                    : '匿名用户',
+                                style: TextStyle(fontSize: 14),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => _toggleLike(post),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    post.isLiked
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: post.isLiked
+                                        ? Colors.red
+                                        : Colors.grey,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    '${post.likesCount}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
